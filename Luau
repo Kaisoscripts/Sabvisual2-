@@ -1,225 +1,189 @@
 -- =============================================
--- Steal a Brainrot - TP Base + Anti-Kick + Anti-Ban + Anti-Detective
--- Black / Red / Yellow Color Scheme
--- Paste this entire script into your executor
+-- STEAL A BRAINROT | SMALL TP GUI
+-- Compact + still dragable, closable, colorful
 -- =============================================
 
-local player = game.Players.LocalPlayer
-local baseCFrame = nil
-local antiKickEnabled = true
-local antiBanEnabled = true
-local antiDetectiveEnabled = true
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
 
--- Save spawn position as base
-local function saveBasePosition(char)
-    if baseCFrame then return end
-    local root = char:WaitForChild("HumanoidRootPart", 5)
-    if root then
-        baseCFrame = root.CFrame
-        print("✅ Base position saved (your spawn)")
-    end
-end
+local player = Players.LocalPlayer
 
-player.CharacterAdded:Connect(saveBasePosition)
-if player.Character then saveBasePosition(player.Character) end
-
--- === Basic Anti-Kick ===
-local mt = getrawmetatable(game)
-local oldNamecall = mt.__namecall
-setreadonly(mt, false)
-
-mt.__namecall = newcclosure(function(self, ...)
-    local method = getnamecallmethod()
-    local args = {...}
-    
-    if antiKickEnabled then
-        if method == "Kick" or (method == "FireServer" and (self.Name:lower():find("kick") or self.Name:lower():find("ban"))) then
-            print("🛡️ Anti-Kick blocked a kick attempt!")
-            return
-        end
-    end
-    
-    return oldNamecall(self, ...)
-end)
-
-setreadonly(mt, true)
-
--- Anti-Ban hook
-game.Players.PlayerRemoving:Connect(function(plr)
-    if plr == player and antiBanEnabled then
-        print("🛡️ Anti-Ban: Prevented sudden removal detection")
-    end
-end)
-
--- Anti-Detective
-local function applyAntiDetective(char)
-    if not antiDetectiveEnabled then return end
-    local humanoid = char:WaitForChild("Humanoid", 3)
-    local head = char:FindFirstChild("Head")
-    
-    if humanoid then
-        humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-    end
-    
-    if head and head:FindFirstChild("Nametag") then
-        head.Nametag:Destroy()
-    end
-end
-
-player.CharacterAdded:Connect(applyAntiDetective)
-if player.Character then applyAntiDetective(player.Character) end
-
--- === Create GUI with Black/Red/Yellow Theme ===
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "BrainrotProtectorGui"
+screenGui.Name = "SmallBrainrotGUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 280, 0, 240)
-frame.Position = UDim2.new(0.5, -140, 0.08, 0)
-frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)  -- Deep Black
-frame.BorderSizePixel = 0
-frame.BackgroundTransparency = 0.05
-frame.Parent = screenGui
+-- Main Frame (Smaller size)
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 280, 0, 220)        -- Much smaller
+mainFrame.Position = UDim2.new(0.5, -140, 0.4, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 14)
-corner.Parent = frame
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 20)
+uiCorner.Parent = mainFrame
 
--- Title with Red accent
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 45)
-title.BackgroundColor3 = Color3.fromRGB(180, 0, 0)  -- Dark Red
-title.Text = "🧠 STEAL A BRAINROT"
-title.TextColor3 = Color3.fromRGB(255, 215, 0)     -- Bright Yellow
-title.TextScaled = true
-title.Font = Enum.Font.GothamBold
-title.Parent = frame
+-- Glowing gradient background
+local uiGradient = Instance.new("UIGradient")
+uiGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 150)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 200)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 50, 255))
+}
+uiGradient.Rotation = 45
+uiGradient.Parent = mainFrame
+
+local uiStroke = Instance.new("UIStroke")
+uiStroke.Color = Color3.fromRGB(255, 255, 100)
+uiStroke.Thickness = 4
+uiStroke.Transparency = 0.4
+uiStroke.Parent = mainFrame
+
+-- Title Bar
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 40)
+titleBar.BackgroundColor3 = Color3.fromRGB(10, 10, 30)
+titleBar.BorderSizePixel = 0
+titleBar.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 14)
-titleCorner.Parent = title
+titleCorner.CornerRadius = UDim.new(0, 20)
+titleCorner.Parent = titleBar
 
--- Subtitle
-local subtitle = Instance.new("TextLabel")
-subtitle.Size = UDim2.new(1, 0, 0, 25)
-subtitle.Position = UDim2.new(0, 0, 0, 45)
-subtitle.BackgroundTransparency = 1
-subtitle.Text = "PROTECTOR & TP BASE"
-subtitle.TextColor3 = Color3.fromRGB(255, 215, 0)  -- Yellow
-subtitle.TextScaled = true
-subtitle.Font = Enum.Font.Gotham
-subtitle.Parent = frame
+local titleText = Instance.new("TextLabel")
+titleText.Size = UDim2.new(1, -70, 1, 0)
+titleText.BackgroundTransparency = 1
+titleText.Text = "🧠 BRAINROT"
+titleText.TextColor3 = Color3.new(1,1,1)
+titleText.TextScaled = true
+titleText.Font = Enum.Font.GothamBold
+titleText.Parent = titleBar
 
--- TP Base Button (Yellow with Red hover feel)
+-- Close Button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 35, 0, 35)
+closeButton.Position = UDim2.new(1, -40, 0.5, -17.5)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
+closeButton.Text = "✕"
+closeButton.TextColor3 = Color3.new(1,1,1)
+closeButton.TextScaled = true
+closeButton.Font = Enum.Font.GothamBold
+closeButton.Parent = titleBar
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 10)
+closeCorner.Parent = closeButton
+
+-- TP Button
 local tpButton = Instance.new("TextButton")
-tpButton.Size = UDim2.new(0.9, 0, 0, 50)
-tpButton.Position = UDim2.new(0.05, 0, 0.32, 0)
-tpButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0)  -- Bright Yellow
-tpButton.Text = "TP BASE"
-tpButton.TextColor3 = Color3.fromRGB(180, 0, 0)          -- Dark Red text
+tpButton.Size = UDim2.new(0.85, 0, 0, 55)
+tpButton.Position = UDim2.new(0.075, 0, 0.32, 0)
+tpButton.BackgroundColor3 = Color3.fromRGB(0, 255, 130)
+tpButton.Text = "TP TO BASE"
+tpButton.TextColor3 = Color3.new(0,0,0)
 tpButton.TextScaled = true
 tpButton.Font = Enum.Font.GothamBold
-tpButton.Parent = frame
+tpButton.Parent = mainFrame
 
-local btnCorner = Instance.new("UICorner")
-btnCorner.CornerRadius = UDim.new(0, 12)
-btnCorner.Parent = tpButton
+local tpCorner = Instance.new("UICorner")
+tpCorner.CornerRadius = UDim.new(0, 16)
+tpCorner.Parent = tpButton
 
--- Toggle function
-local function createToggle(name, yPos, default)
-    local toggleFrame = Instance.new("Frame")
-    toggleFrame.Size = UDim2.new(0.9, 0, 0, 38)
-    toggleFrame.Position = UDim2.new(0.05, 0, yPos, 0)
-    toggleFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)  -- Dark Gray
-    toggleFrame.Parent = frame
-    
-    local tCorner = Instance.new("UICorner")
-    tCorner.CornerRadius = UDim.new(0, 10)
-    tCorner.Parent = toggleFrame
-    
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0.65, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Text = name
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Font = Enum.Font.GothamSemibold
-    label.TextScaled = true
-    label.Parent = toggleFrame
-    
-    local status = Instance.new("TextLabel")
-    status.Size = UDim2.new(0.3, 0, 1, 0)
-    status.Position = UDim2.new(0.67, 0, 0, 0)
-    status.BackgroundTransparency = 1
-    status.Text = default and "ON" or "OFF"
-    status.TextColor3 = default and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(180, 0, 0)
-    status.TextScaled = true
-    status.Font = Enum.Font.GothamBold
-    status.Parent = toggleFrame
-    
-    toggleFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            if name == "Anti-Kick" then
-                antiKickEnabled = not antiKickEnabled
-                status.Text = antiKickEnabled and "ON" or "OFF"
-                status.TextColor3 = antiKickEnabled and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(180, 0, 0)
-            elseif name == "Anti-Ban" then
-                antiBanEnabled = not antiBanEnabled
-                status.Text = antiBanEnabled and "ON" or "OFF"
-                status.TextColor3 = antiBanEnabled and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(180, 0, 0)
-            elseif name == "Anti-Detective" then
-                antiDetectiveEnabled = not antiDetectiveEnabled
-                status.Text = antiDetectiveEnabled and "ON" or "OFF"
-                status.TextColor3 = antiDetectiveEnabled and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(180, 0, 0)
-            end
-        end
-    end)
+-- Discord Button
+local discordButton = Instance.new("TextButton")
+discordButton.Size = UDim2.new(0.85, 0, 0, 55)
+discordButton.Position = UDim2.new(0.075, 0, 0.65, 0)
+discordButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+discordButton.Text = "JOIN DISCORD"
+discordButton.TextColor3 = Color3.new(1,1,1)
+discordButton.TextScaled = true
+discordButton.Font = Enum.Font.GothamBold
+discordButton.Parent = mainFrame
+
+local discordCorner = Instance.new("UICorner")
+discordCorner.CornerRadius = UDim.new(0, 16)
+discordCorner.Parent = discordButton
+
+-- Save spawn/base position
+local baseCFrame = nil
+local function saveBase()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart", 3)
+    if hrp then
+        baseCFrame = hrp.CFrame
+    end
 end
+saveBase()
 
-createToggle("Anti-Kick", 0.55, true)
-createToggle("Anti-Ban", 0.72, true)
-createToggle("Anti-Detective", 0.89, true)
-
--- Make GUI draggable (drag from title)
-local dragging = false
-local dragStart, startPos
-
-title.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-    end
-end)
-
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-
--- TP Base functionality
-tpButton.MouseButton1Click:Connect(function()
-    if not baseCFrame then
-        print("❌ Base not saved yet. Respawn or wait.")
-        return
-    end
-    
+-- Teleport
+local function tpToBase()
+    if not baseCFrame then return end
     local char = player.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         char.HumanoidRootPart.CFrame = baseCFrame
-        print("🚀 Teleported to your base!")
+    end
+end
+
+-- Draggable (only from title bar)
+local dragging = false
+local dragInput, dragStart, startPos
+
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
         
-        -- Flash effect (Yellow -> Red -> Yellow)
-        local ts = game:GetService("TweenService")
-        ts:Create(tpButton, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(180, 0, 0)}):Play()
-        task.wait(0.2)
-        ts:Create(tpButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 215, 0)}):Play()
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
     end
 end)
 
-print("✅ Black/Red/Yellow Protector GUI loaded for Steal a Brainrot!")
-print("   TP Base • Anti-Kick • Anti-Ban • Anti-Detective ready")
+titleBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and dragInput == input then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Button actions
+closeButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+end)
+
+tpButton.MouseButton1Click:Connect(tpToBase)
+
+discordButton.MouseButton1Click:Connect(function()
+    local link = "https://discord.gg/Zw6Vyv6BZ"
+    pcall(function() setclipboard(link) end)
+    StarterGui:SetCore("SendNotification", {
+        Title = "Discord",
+        Text = "Invite copied! → " .. link,
+        Duration = 8
+    })
+end)
+
+-- Reopen with INSERT key
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Insert then
+        mainFrame.Visible = not mainFrame.Visible
+    end
+end)
+
+StarterGui:SetCore("SendNotification", {
+    Title = "🧠 Small Brainrot GUI",
+    Text = "Drag title • INSERT to toggle",
+    Duration = 6
+})
