@@ -1,0 +1,225 @@
+-- =============================================
+-- Steal a Brainrot - TP Base + Anti-Kick + Anti-Ban + Anti-Detective
+-- Black / Red / Yellow Color Scheme
+-- Paste this entire script into your executor
+-- =============================================
+
+local player = game.Players.LocalPlayer
+local baseCFrame = nil
+local antiKickEnabled = true
+local antiBanEnabled = true
+local antiDetectiveEnabled = true
+
+-- Save spawn position as base
+local function saveBasePosition(char)
+    if baseCFrame then return end
+    local root = char:WaitForChild("HumanoidRootPart", 5)
+    if root then
+        baseCFrame = root.CFrame
+        print("✅ Base position saved (your spawn)")
+    end
+end
+
+player.CharacterAdded:Connect(saveBasePosition)
+if player.Character then saveBasePosition(player.Character) end
+
+-- === Basic Anti-Kick ===
+local mt = getrawmetatable(game)
+local oldNamecall = mt.__namecall
+setreadonly(mt, false)
+
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+    
+    if antiKickEnabled then
+        if method == "Kick" or (method == "FireServer" and (self.Name:lower():find("kick") or self.Name:lower():find("ban"))) then
+            print("🛡️ Anti-Kick blocked a kick attempt!")
+            return
+        end
+    end
+    
+    return oldNamecall(self, ...)
+end)
+
+setreadonly(mt, true)
+
+-- Anti-Ban hook
+game.Players.PlayerRemoving:Connect(function(plr)
+    if plr == player and antiBanEnabled then
+        print("🛡️ Anti-Ban: Prevented sudden removal detection")
+    end
+end)
+
+-- Anti-Detective
+local function applyAntiDetective(char)
+    if not antiDetectiveEnabled then return end
+    local humanoid = char:WaitForChild("Humanoid", 3)
+    local head = char:FindFirstChild("Head")
+    
+    if humanoid then
+        humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+    end
+    
+    if head and head:FindFirstChild("Nametag") then
+        head.Nametag:Destroy()
+    end
+end
+
+player.CharacterAdded:Connect(applyAntiDetective)
+if player.Character then applyAntiDetective(player.Character) end
+
+-- === Create GUI with Black/Red/Yellow Theme ===
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BrainrotProtectorGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 280, 0, 240)
+frame.Position = UDim2.new(0.5, -140, 0.08, 0)
+frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)  -- Deep Black
+frame.BorderSizePixel = 0
+frame.BackgroundTransparency = 0.05
+frame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 14)
+corner.Parent = frame
+
+-- Title with Red accent
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 45)
+title.BackgroundColor3 = Color3.fromRGB(180, 0, 0)  -- Dark Red
+title.Text = "🧠 STEAL A BRAINROT"
+title.TextColor3 = Color3.fromRGB(255, 215, 0)     -- Bright Yellow
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.Parent = frame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 14)
+titleCorner.Parent = title
+
+-- Subtitle
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1, 0, 0, 25)
+subtitle.Position = UDim2.new(0, 0, 0, 45)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "PROTECTOR & TP BASE"
+subtitle.TextColor3 = Color3.fromRGB(255, 215, 0)  -- Yellow
+subtitle.TextScaled = true
+subtitle.Font = Enum.Font.Gotham
+subtitle.Parent = frame
+
+-- TP Base Button (Yellow with Red hover feel)
+local tpButton = Instance.new("TextButton")
+tpButton.Size = UDim2.new(0.9, 0, 0, 50)
+tpButton.Position = UDim2.new(0.05, 0, 0.32, 0)
+tpButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0)  -- Bright Yellow
+tpButton.Text = "TP BASE"
+tpButton.TextColor3 = Color3.fromRGB(180, 0, 0)          -- Dark Red text
+tpButton.TextScaled = true
+tpButton.Font = Enum.Font.GothamBold
+tpButton.Parent = frame
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 12)
+btnCorner.Parent = tpButton
+
+-- Toggle function
+local function createToggle(name, yPos, default)
+    local toggleFrame = Instance.new("Frame")
+    toggleFrame.Size = UDim2.new(0.9, 0, 0, 38)
+    toggleFrame.Position = UDim2.new(0.05, 0, yPos, 0)
+    toggleFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)  -- Dark Gray
+    toggleFrame.Parent = frame
+    
+    local tCorner = Instance.new("UICorner")
+    tCorner.CornerRadius = UDim.new(0, 10)
+    tCorner.Parent = toggleFrame
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.65, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.GothamSemibold
+    label.TextScaled = true
+    label.Parent = toggleFrame
+    
+    local status = Instance.new("TextLabel")
+    status.Size = UDim2.new(0.3, 0, 1, 0)
+    status.Position = UDim2.new(0.67, 0, 0, 0)
+    status.BackgroundTransparency = 1
+    status.Text = default and "ON" or "OFF"
+    status.TextColor3 = default and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(180, 0, 0)
+    status.TextScaled = true
+    status.Font = Enum.Font.GothamBold
+    status.Parent = toggleFrame
+    
+    toggleFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if name == "Anti-Kick" then
+                antiKickEnabled = not antiKickEnabled
+                status.Text = antiKickEnabled and "ON" or "OFF"
+                status.TextColor3 = antiKickEnabled and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(180, 0, 0)
+            elseif name == "Anti-Ban" then
+                antiBanEnabled = not antiBanEnabled
+                status.Text = antiBanEnabled and "ON" or "OFF"
+                status.TextColor3 = antiBanEnabled and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(180, 0, 0)
+            elseif name == "Anti-Detective" then
+                antiDetectiveEnabled = not antiDetectiveEnabled
+                status.Text = antiDetectiveEnabled and "ON" or "OFF"
+                status.TextColor3 = antiDetectiveEnabled and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(180, 0, 0)
+            end
+        end
+    end)
+end
+
+createToggle("Anti-Kick", 0.55, true)
+createToggle("Anti-Ban", 0.72, true)
+createToggle("Anti-Detective", 0.89, true)
+
+-- Make GUI draggable (drag from title)
+local dragging = false
+local dragStart, startPos
+
+title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- TP Base functionality
+tpButton.MouseButton1Click:Connect(function()
+    if not baseCFrame then
+        print("❌ Base not saved yet. Respawn or wait.")
+        return
+    end
+    
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        char.HumanoidRootPart.CFrame = baseCFrame
+        print("🚀 Teleported to your base!")
+        
+        -- Flash effect (Yellow -> Red -> Yellow)
+        local ts = game:GetService("TweenService")
+        ts:Create(tpButton, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(180, 0, 0)}):Play()
+        task.wait(0.2)
+        ts:Create(tpButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 215, 0)}):Play()
+    end
+end)
+
+print("✅ Black/Red/Yellow Protector GUI loaded for Steal a Brainrot!")
+print("   TP Base • Anti-Kick • Anti-Ban • Anti-Detective ready")
